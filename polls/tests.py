@@ -3,8 +3,10 @@ import datetime
 from django.test import TestCase
 from django.utils import timezone
 
-from .models import Question
+from .models import Question, Choice
 from django.urls import reverse
+from .views import vote
+from django.test.client import RequestFactory
 
 
 def create_question(question_text, days):
@@ -16,6 +18,21 @@ def create_question(question_text, days):
     time = timezone.now() + datetime.timedelta(days=days)
     return Question.objects.create(question_text=question_text, pub_date=time)
 
+class ChoiceModelTest(TestCase):
+    def test_was_updated_now(self):
+        """
+        updated_at equals timezone.now()
+        """
+        now = timezone.now()
+        question = Question.objects.create(question_text="hola", pub_date=now)
+        choice_created = Choice.objects.create(choice_text="hola", question=question)
+        request = RequestFactory().post(f"/polls/{question.pk}/vote")
+        vote(request, question.pk)
+
+        # Use the correct primary key for filtering the Choice object
+        choice_updated = Choice.objects.filter(pk=choice_created.pk).get()
+
+        self.assertIs(choice_updated.updated_at.time(), now.time())
 
 class QuestionModelTests(TestCase):
     def test_was_published_recently_with_future_question(self):
@@ -26,6 +43,7 @@ class QuestionModelTests(TestCase):
         time = timezone.now() + datetime.timedelta(days=30)
         future_question = Question(pub_date=time)
         self.assertIs(future_question.was_published_recently(), False)
+
 
     def test_was_published_recently_with_old_question(self):
         """

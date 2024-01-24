@@ -1,3 +1,7 @@
+{% extends "base.html" %}
+
+{% block title %}Results of votes{% endblock %}
+{% block content %}
 <h1>{{ question.question_text }}</h1>
 
 <ul>
@@ -5,5 +9,9 @@
     <li>{{ choice.choice_text }} -- {{ choice.votes }} vote{{ choice.votes|pluralize }}</li>
 {% endfor %}
 </ul>
+<p>Opcion creada el dia: {{question.created_at}}</p>
+<p>Opcion actualizada el dia: {{question.updated_at}}</p>
+
 
 <a href="{% url 'polls:detail' question.id %}">Vote again?</a>
+{% endblock %}

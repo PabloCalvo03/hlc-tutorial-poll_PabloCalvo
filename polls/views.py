@@ -1,3 +1,5 @@
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader
 from .models import Question, Choice
@@ -5,9 +7,11 @@ from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.views import generic
 from django.utils import timezone
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
-class IndexView(generic.ListView):
+
+class IndexView(LoginRequiredMixin, generic.ListView):
     template_name = "polls/index.html"
     context_object_name = "latest_question_list"
 
@@ -21,16 +25,16 @@ class IndexView(generic.ListView):
                ]
 
 
-class DetailView(generic.DetailView):
+class DetailView(LoginRequiredMixin, generic.DetailView):
     model = Question
     template_name = "polls/detail.html"
 
 
-class ResultsView(generic.DetailView):
+class ResultsView(LoginRequiredMixin, generic.DetailView):
     model = Question
     template_name = "polls/results.html"
 
-
+@login_required
 def vote(request, question_id):
     question = get_object_or_404(Question, pk=question_id)
     try:
@@ -47,8 +51,20 @@ def vote(request, question_id):
         )
     else:
         selected_choice.votes += 1
+        selected_choice.updated_at = timezone.now()
         selected_choice.save()
         # Always return an HttpResponseRedirect after successfully dealing
         # with POST data. This prevents data from being posted twice if a
         # user hits the Back button.
         return HttpResponseRedirect(reverse("polls:results", args=(question.id,)))
+
+class QuestionByUserListView(LoginRequiredMixin,generic.ListView):
+    """
+    Vista genérica basada en clases que enumera las preguntas asignadas al usuario actual.
+    """
+    model = Question
+    template_name ='polls/questions_list_pollsters_user.html'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Question.objects.filter(pollster=self.request.user).order_by('pub_date')
