@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Voting page{% endblock %}
+
+{% block content %}
+  <h1>Welcome to the Home Page</h1>
+  
+  <a href="{% url 'polls:index' %}">
+    <button>Go to Polls</button>
+  </a>
+  <a href="{% url 'admin:index' %}">
+    <button>Go to Polls</button>
+  </a>
+{% endblock %}
